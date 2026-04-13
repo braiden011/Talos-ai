@@ -1,71 +1,273 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Talos AI</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 95vh; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
-        .bubble { margin: 10px; padding: 15px; border-radius: 15px; max-width: 70%; line-height: 1.5; }
-        .user { align-self: flex-end; background: #007bff; }
-        .bot { align-self: flex-start; background: #333; border: 1px solid #00ffcc; color: #00ffcc; }
-        #input-area { padding: 20px; background: #222; display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border-radius: 5px; border: none; }
-        button { padding: 10px; cursor: pointer; background: #00ffcc; border: none; border-radius: 5px; font-weight: bold; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #121212; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; }
+
+        #header {
+            background: #1a1a1a;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #00ffcc33;
+        }
+        #header h1 { font-size: 18px; color: #00ffcc; letter-spacing: 2px; }
+
+        #tts-toggle {
+            background: none;
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        #tts-toggle.muted {
+            border-color: #555;
+            color: #555;
+        }
+
+        #chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 72%;
+            line-height: 1.5;
+            font-size: 15px;
+            word-wrap: break-word;
+        }
+        .user { align-self: flex-end; background: #0062cc; border-bottom-right-radius: 4px; }
+        .bot { align-self: flex-start; background: #1e1e1e; border: 1px solid #00ffcc55; color: #00ffcc; border-bottom-left-radius: 4px; }
+
+        #input-area {
+            padding: 14px 20px;
+            background: #1a1a1a;
+            border-top: 1px solid #00ffcc22;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #textInput {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 25px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        #textInput:focus { border-color: #00ffcc55; }
+
+        .btn {
+            padding: 11px 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        #voiceBtn {
+            background: #222;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            min-width: 50px;
+        }
+        #voiceBtn.listening {
+            background: #00ffcc;
+            color: #000;
+            animation: pulse 1s infinite;
+        }
+        #sendBtn {
+            background: #00ffcc;
+            color: #000;
+        }
+        #sendBtn:hover { background: #00ddb0; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        #status {
+            font-size: 12px;
+            color: #555;
+            padding: 0 20px 8px;
+            min-height: 20px;
+        }
     </style>
 </head>
 <body>
-    <div id="chat"></div>
-    <div id="input-area">
-        <input type="text" id="textInput" placeholder="Talk to Talos...">
-        <button onclick="startListening()">🎤 Voice</button>
-        <button onclick="sendMessage()">Send</button>
-    </div>
 
-    <script>
-        const chat = document.getElementById('chat');
-        const synth = window.speechSynthesis;
+<div id="header">
+    <h1>⬡ TALOS</h1>
+    <button id="tts-toggle" onclick="toggleTTS()">🔊 Voice On</button>
+</div>
 
-        function addBubble(text, type) {
-            const b = document.createElement('div');
-            b.className = `bubble ${type}`;
-            b.innerText = text;
-            chat.appendChild(b);
-            chat.scrollTop = chat.scrollHeight;
-            if (type === 'bot') speak(text);
+<div id="chat"></div>
+<div id="status"></div>
+
+<div id="input-area">
+    <input type="text" id="textInput" placeholder="Talk to Talos..." onkeydown="if(event.key==='Enter') sendMessage()">
+    <button class="btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
+    <button class="btn" id="sendBtn" onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+    const chat = document.getElementById('chat');
+    const statusEl = document.getElementById('status');
+    const ttsToggleBtn = document.getElementById('tts-toggle');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const synth = window.speechSynthesis;
+
+    let ttsEnabled = true;
+    let preferredVoice = null;
+    let recognition = null;
+    let isListening = false;
+
+    function setStatus(msg) {
+        statusEl.textContent = msg;
+    }
+
+    function loadVoices() {
+        const voices = synth.getVoices();
+        const preferred = [
+            'Google UK English Male',
+            'Microsoft David Desktop',
+            'Microsoft Mark',
+            'Alex',
+            'Daniel',
+        ];
+        for (const name of preferred) {
+            const v = voices.find(v => v.name === name);
+            if (v) { preferredVoice = v; break; }
+        }
+        if (!preferredVoice) {
+            preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
+                          || voices.find(v => v.lang.startsWith('en'))
+                          || voices[0];
+        }
+    }
+
+    synth.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function toggleTTS() {
+        ttsEnabled = !ttsEnabled;
+        ttsToggleBtn.textContent = ttsEnabled ? '🔊 Voice On' : '🔇 Voice Off';
+        ttsToggleBtn.classList.toggle('muted', !ttsEnabled);
+        if (!ttsEnabled) synth.cancel();
+    }
+
+    function speak(text) {
+        if (!ttsEnabled) return;
+        synth.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        if (preferredVoice) msg.voice = preferredVoice;
+        msg.rate = 0.92;
+        msg.pitch = 0.85;
+        msg.volume = 1;
+        synth.speak(msg);
+    }
+
+    function addBubble(text, type) {
+        const b = document.createElement('div');
+        b.className = `bubble ${type}`;
+        b.innerText = text;
+        chat.appendChild(b);
+        chat.scrollTop = chat.scrollHeight;
+        if (type === 'bot') speak(text);
+    }
+
+    function toggleVoiceInput() {
+        if (isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
+    }
+
+    function startListening() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            setStatus('Voice input not supported in this browser.');
+            return;
         }
 
-        function speak(text) {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.rate = 0.9; // Slightly slower/robotic
-            msg.pitch = 0.8;
-            synth.speak(msg);
-        }
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-        function startListening() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                document.getElementById('textInput').value = text;
-                sendMessage();
-            };
-            recognition.start();
-        }
+        recognition.onstart = () => {
+            isListening = true;
+            voiceBtn.classList.add('listening');
+            voiceBtn.textContent = '⏹';
+            setStatus('Listening...');
+        };
 
-        async function sendMessage() {
-            const input = document.getElementById('textInput');
-            const message = input.value;
-            if (!message) return;
+        recognition.onresult = (event) => {
+            const text = event.results[0][0].transcript;
+            document.getElementById('textInput').value = text;
+            stopListening();
+            sendMessage();
+        };
 
-            addBubble(message, 'user');
-            input.value = '';
+        recognition.onerror = (event) => {
+            stopListening();
+            setStatus(event.error === 'not-allowed' ? 'Mic permission denied.' : 'Voice error: ' + event.error);
+        };
 
+        recognition.onend = () => stopListening();
+
+        recognition.start();
+    }
+
+    function stopListening() {
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        voiceBtn.textContent = '🎤';
+        setStatus('');
+        if (recognition) { recognition.stop(); recognition = null; }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('textInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        addBubble(message, 'user');
+        input.value = '';
+        setStatus('Talos is thinking...');
+
+        try {
             const response = await fetch('/ask', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: message})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
             });
             const data = await response.json();
             addBubble(data.response, 'bot');
+        } catch (e) {
+            addBubble('Connection error. Please try again.', 'bot');
         }
-    </script>
+        setStatus('');
+    }
+</script>
 </body>
 </html>
