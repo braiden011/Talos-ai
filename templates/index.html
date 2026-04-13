@@ -14,7 +14,8 @@
             justify-content: space-between;
             border-bottom: 1px solid #00ffcc33;
         }
-        #header h1 { font-size: 18px; color: #00ffcc; letter-spacing: 2px; }
+        #header h1 { font-size: 18px; color: #00ffcc; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
+        #header h1 img { height: 36px; width: auto; }
 
         #header-right { display: flex; gap: 10px; align-items: center; }
 
@@ -115,7 +116,7 @@
 <body>
 
 <div id="header">
-    <h1>⬡ TALOS</h1>
+    <h1><img src="/static/logo.png" alt="Talos Logo"> TALOS</h1>
     <div id="header-right">
         <button class="toggle-btn" id="ttsBtn" onclick="toggleTTS()">🔊 Voice On</button>
         <button class="toggle-btn off" id="resetBtn" onclick="resetChat()" title="Clear conversation">↺ Reset</button>
