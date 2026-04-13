@@ -66,7 +66,7 @@ def ask():
         response = client.chat.completions.create(
             model="gpt-5-mini",
             messages=messages,
-            max_tokens=300,
+            max_completion_tokens=300,
         )
         bot_reply = response.choices[0].message.content.strip()
         conversation_history.append({"role": "assistant", "content": bot_reply})
