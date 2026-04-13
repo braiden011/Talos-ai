@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 95vh; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+        .bubble { margin: 10px; padding: 15px; border-radius: 15px; max-width: 70%; line-height: 1.5; }
+        .user { align-self: flex-end; background: #007bff; }
+        .bot { align-self: flex-start; background: #333; border: 1px solid #00ffcc; color: #00ffcc; }
+        #input-area { padding: 20px; background: #222; display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px; cursor: pointer; background: #00ffcc; border: none; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="chat"></div>
+    <div id="input-area">
+        <input type="text" id="textInput" placeholder="Talk to Talos...">
+        <button onclick="startListening()">🎤 Voice</button>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const chat = document.getElementById('chat');
+        const synth = window.speechSynthesis;
+
+        function addBubble(text, type) {
+            const b = document.createElement('div');
+            b.className = `bubble ${type}`;
+            b.innerText = text;
+            chat.appendChild(b);
+            chat.scrollTop = chat.scrollHeight;
+            if (type === 'bot') speak(text);
+        }
+
+        function speak(text) {
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 0.9; // Slightly slower/robotic
+            msg.pitch = 0.8;
+            synth.speak(msg);
+        }
+
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                document.getElementById('textInput').value = text;
+                sendMessage();
+            };
+            recognition.start();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('textInput');
+            const message = input.value;
+            if (!message) return;
+
+            addBubble(message, 'user');
+            input.value = '';
+
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: message})
+            });
+            const data = await response.json();
+            addBubble(data.response, 'bot');
+        }
+    </script>
+</body>
+</html>
