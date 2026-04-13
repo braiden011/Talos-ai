@@ -16,7 +16,9 @@
         }
         #header h1 { font-size: 18px; color: #00ffcc; letter-spacing: 2px; }
 
-        #tts-toggle {
+        #header-right { display: flex; gap: 10px; align-items: center; }
+
+        .toggle-btn {
             background: none;
             border: 1px solid #00ffcc;
             color: #00ffcc;
@@ -26,10 +28,7 @@
             font-size: 13px;
             transition: all 0.2s;
         }
-        #tts-toggle.muted {
-            border-color: #555;
-            color: #555;
-        }
+        .toggle-btn.off { border-color: #555; color: #555; }
 
         #chat {
             flex: 1;
@@ -72,6 +71,7 @@
             transition: border 0.2s;
         }
         #textInput:focus { border-color: #00ffcc55; }
+        #textInput:disabled { opacity: 0.5; }
 
         .btn {
             padding: 11px 18px;
@@ -93,11 +93,9 @@
             color: #000;
             animation: pulse 1s infinite;
         }
-        #sendBtn {
-            background: #00ffcc;
-            color: #000;
-        }
+        #sendBtn { background: #00ffcc; color: #000; }
         #sendBtn:hover { background: #00ddb0; }
+        #sendBtn:disabled { opacity: 0.5; cursor: default; }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -110,13 +108,18 @@
             padding: 0 20px 8px;
             min-height: 20px;
         }
+
+        .typing { color: #555; font-style: italic; font-size: 14px; align-self: flex-start; padding: 8px 4px; }
     </style>
 </head>
 <body>
 
 <div id="header">
     <h1>⬡ TALOS</h1>
-    <button id="tts-toggle" onclick="toggleTTS()">🔊 Voice On</button>
+    <div id="header-right">
+        <button class="toggle-btn" id="ttsBtn" onclick="toggleTTS()">🔊 Voice On</button>
+        <button class="toggle-btn off" id="resetBtn" onclick="resetChat()" title="Clear conversation">↺ Reset</button>
+    </div>
 </div>
 
 <div id="chat"></div>
@@ -131,58 +134,39 @@
 <script>
     const chat = document.getElementById('chat');
     const statusEl = document.getElementById('status');
-    const ttsToggleBtn = document.getElementById('tts-toggle');
-    const voiceBtn = document.getElementById('voiceBtn');
-    const synth = window.speechSynthesis;
+    const ttsBtn = document.getElementById('ttsBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const textInput = document.getElementById('textInput');
 
     let ttsEnabled = true;
-    let preferredVoice = null;
     let recognition = null;
     let isListening = false;
+    let currentAudio = null;
 
-    function setStatus(msg) {
-        statusEl.textContent = msg;
-    }
-
-    function loadVoices() {
-        const voices = synth.getVoices();
-        const preferred = [
-            'Google UK English Male',
-            'Microsoft David Desktop',
-            'Microsoft Mark',
-            'Alex',
-            'Daniel',
-        ];
-        for (const name of preferred) {
-            const v = voices.find(v => v.name === name);
-            if (v) { preferredVoice = v; break; }
-        }
-        if (!preferredVoice) {
-            preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
-                          || voices.find(v => v.lang.startsWith('en'))
-                          || voices[0];
-        }
-    }
-
-    synth.onvoiceschanged = loadVoices;
-    loadVoices();
+    function setStatus(msg) { statusEl.textContent = msg; }
 
     function toggleTTS() {
         ttsEnabled = !ttsEnabled;
-        ttsToggleBtn.textContent = ttsEnabled ? '🔊 Voice On' : '🔇 Voice Off';
-        ttsToggleBtn.classList.toggle('muted', !ttsEnabled);
-        if (!ttsEnabled) synth.cancel();
+        ttsBtn.textContent = ttsEnabled ? '🔊 Voice On' : '🔇 Voice Off';
+        ttsBtn.classList.toggle('off', !ttsEnabled);
+        if (!ttsEnabled && currentAudio) { currentAudio.pause(); currentAudio = null; }
     }
 
-    function speak(text) {
+    async function speak(text) {
         if (!ttsEnabled) return;
-        synth.cancel();
-        const msg = new SpeechSynthesisUtterance(text);
-        if (preferredVoice) msg.voice = preferredVoice;
-        msg.rate = 0.92;
-        msg.pitch = 0.85;
-        msg.volume = 1;
-        synth.speak(msg);
+        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        try {
+            const resp = await fetch('/speak', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            if (!resp.ok) return;
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            currentAudio = new Audio(url);
+            currentAudio.play();
+        } catch (e) {}
     }
 
     function addBubble(text, type) {
@@ -194,25 +178,22 @@
         if (type === 'bot') speak(text);
     }
 
+    function setLoading(loading) {
+        sendBtn.disabled = loading;
+        textInput.disabled = loading;
+    }
+
     function toggleVoiceInput() {
-        if (isListening) {
-            stopListening();
-        } else {
-            startListening();
-        }
+        isListening ? stopListening() : startListening();
     }
 
     function startListening() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            setStatus('Voice input not supported in this browser.');
-            return;
-        }
+        if (!SpeechRecognition) { setStatus('Voice input not supported in this browser.'); return; }
 
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
 
         recognition.onstart = () => {
             isListening = true;
@@ -220,21 +201,16 @@
             voiceBtn.textContent = '⏹';
             setStatus('Listening...');
         };
-
-        recognition.onresult = (event) => {
-            const text = event.results[0][0].transcript;
-            document.getElementById('textInput').value = text;
+        recognition.onresult = (e) => {
+            textInput.value = e.results[0][0].transcript;
             stopListening();
             sendMessage();
         };
-
-        recognition.onerror = (event) => {
+        recognition.onerror = (e) => {
             stopListening();
-            setStatus(event.error === 'not-allowed' ? 'Mic permission denied.' : 'Voice error: ' + event.error);
+            setStatus(e.error === 'not-allowed' ? 'Mic permission denied.' : 'Voice error: ' + e.error);
         };
-
         recognition.onend = () => stopListening();
-
         recognition.start();
     }
 
@@ -247,13 +223,19 @@
     }
 
     async function sendMessage() {
-        const input = document.getElementById('textInput');
-        const message = input.value.trim();
+        const message = textInput.value.trim();
         if (!message) return;
 
         addBubble(message, 'user');
-        input.value = '';
-        setStatus('Talos is thinking...');
+        textInput.value = '';
+        setLoading(true);
+
+        const typing = document.createElement('div');
+        typing.className = 'typing';
+        typing.id = 'typing-indicator';
+        typing.textContent = 'Talos is thinking...';
+        chat.appendChild(typing);
+        chat.scrollTop = chat.scrollHeight;
 
         try {
             const response = await fetch('/ask', {
@@ -262,11 +244,20 @@
                 body: JSON.stringify({ message })
             });
             const data = await response.json();
+            document.getElementById('typing-indicator')?.remove();
             addBubble(data.response, 'bot');
         } catch (e) {
+            document.getElementById('typing-indicator')?.remove();
             addBubble('Connection error. Please try again.', 'bot');
         }
-        setStatus('');
+        setLoading(false);
+    }
+
+    async function resetChat() {
+        await fetch('/reset', { method: 'POST' });
+        chat.innerHTML = '';
+        setStatus('Conversation cleared.');
+        setTimeout(() => setStatus(''), 2000);
     }
 </script>
 </body>

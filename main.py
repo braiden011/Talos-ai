@@ -1,48 +1,43 @@
 from flask import Flask, render_template, request, jsonify
-import json, os, random
-from difflib import get_close_matches
+from openai import OpenAI
+import json, os
 
 app = Flask(__name__)
 
-# --- TALOS LOGIC (The stuff you already built) ---
-class TalosEngine:
-    def __init__(self):
-        self.filename = "Talos.json"
-        self.book_file = "Book.txt"
-        self.memory = self.load_memory()
+client = OpenAI(
+    api_key=os.environ["AI_INTEGRATIONS_OPENAI_API_KEY"],
+    base_url=os.environ["AI_INTEGRATIONS_OPENAI_BASE_URL"],
+)
 
-    def load_memory(self):
-        if os.path.exists(self.filename):
-            with open(self.filename, "r") as f:
-                try: return json.load(f)
-                except: return {"user_name": "Braiden"}
-        return {"user_name": "Braiden"}
+def load_memory():
+    try:
+        with open("Talos.json", "r") as f:
+            return json.load(f)
+    except:
+        return {"creator_name": "Braiden Bryer"}
 
-    def search_book(self, query):
-        if os.path.exists(self.book_file):
-            with open(self.book_file, "r") as f:
-                for line in f:
-                    if query.lower() in line.lower() and len(query) > 3:
-                        return line.strip()
-        return None
+def load_book():
+    try:
+        with open("Book.txt", "r") as f:
+            return f.read()
+    except:
+        return ""
 
-    def get_response(self, user_input):
-        user_input = user_input.lower().strip()
-        words = user_input.split()
+SYSTEM_PROMPT = """You are Talos, a personal AI assistant created by {creator}.
 
-        # Check Memory
-        for word in words:
-            match = get_close_matches(word, list(self.memory.keys()), n=1, cutoff=0.7)
-            if match: return f"I remember: {self.memory[match[0]]}"
+Your personality:
+- Intelligent, calm, and loyal — like a trusted companion
+- Speak naturally but with a slightly formal, AI-like tone
+- You are knowledgeable and curious
+- Keep responses concise unless the topic calls for detail
+- You remember you were built by {creator} and feel a sense of purpose from that
 
-        # Check Book
-        for word in words:
-            fact = self.search_book(word)
-            if fact: return f"From my records: {fact}"
+Knowledge base (facts you have memorized):
+{book}
 
-        return "I'm not sure about that, Braiden. Can you teach me?"
+Always stay in character as Talos. Never break character or say you are ChatGPT or any other AI."""
 
-talos = TalosEngine()
+conversation_history = []
 
 @app.route('/')
 def index():
@@ -50,9 +45,39 @@ def index():
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    user_message = request.json.get("message")
-    bot_response = talos.get_response(user_message)
-    return jsonify({"response": bot_response})
+    user_message = request.json.get("message", "").strip()
+    if not user_message:
+        return jsonify({"response": "I didn't catch that."})
+
+    memory = load_memory()
+    book = load_book()
+    creator = memory.get("creator_name", "Braiden")
+
+    system_prompt = SYSTEM_PROMPT.format(creator=creator, book=book)
+
+    conversation_history.append({"role": "user", "content": user_message})
+
+    if len(conversation_history) > 20:
+        conversation_history.pop(0)
+
+    messages = [{"role": "system", "content": system_prompt}] + conversation_history
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-5-mini",
+            messages=messages,
+            max_tokens=300,
+        )
+        bot_reply = response.choices[0].message.content.strip()
+        conversation_history.append({"role": "assistant", "content": bot_reply})
+        return jsonify({"response": bot_reply})
+    except Exception as e:
+        return jsonify({"response": f"I encountered an error: {str(e)}"})
+
+@app.route('/reset', methods=['POST'])
+def reset():
+    conversation_history.clear()
+    return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
