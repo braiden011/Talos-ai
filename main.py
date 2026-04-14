@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from openai import OpenAI
 import json, os, base64
 
@@ -106,6 +106,23 @@ def ask():
 def reset():
     conversation_history.clear()
     return jsonify({"status": "ok"})
+
+@app.route('/tts', methods=['POST'])
+def tts():
+    text = request.json.get('text', '').strip()
+    if not text:
+        return '', 400
+    try:
+        audio_response = client.audio.speech.create(
+            model="tts-1-hd",
+            voice="onyx",
+            input=text,
+            response_format="mp3",
+        )
+        return Response(audio_response.content, mimetype='audio/mpeg')
+    except Exception as e:
+        print(f"[TTS error] {e}")
+        return '', 500
 
 # ── Journal Routes ──
 
