@@ -1,140 +1,396 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talos AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #121212; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        :root {
+            --bg-primary: #0d0d0f;
+            --bg-secondary: #13131a;
+            --bg-surface: #1a1a24;
+            --bg-elevated: #22222e;
+            --accent: #c9a84c;
+            --accent-dim: #c9a84c33;
+            --accent-hover: #e0bc6a;
+            --text-primary: #f0ede8;
+            --text-secondary: #8a8794;
+            --text-muted: #4a4858;
+            --border: #2a2838;
+            --border-subtle: #1e1d28;
+            --user-bubble: #1e3a5f;
+            --user-border: #2a5080;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
         #header {
-            background: #1a1a1a;
-            padding: 14px 20px;
+            background: var(--bg-secondary);
+            padding: 0 24px;
+            height: 64px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid #00ffcc33;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            position: relative;
         }
-        #header h1 { font-size: 18px; color: #00ffcc; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
-        #header h1 img { height: 36px; width: auto; }
 
-        #header-right { display: flex; gap: 10px; align-items: center; }
-
-        .toggle-btn {
-            background: none;
-            border: 1px solid #00ffcc;
-            color: #00ffcc;
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
+        #header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
         }
-        .toggle-btn.off { border-color: #555; color: #555; }
 
-        #chat {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
+        #brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #brand img {
+            height: 38px;
+            width: auto;
+            filter: drop-shadow(0 0 8px rgba(201,168,76,0.35));
+        }
+
+        #brand-text {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+        }
+
+        #brand-name {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        #brand-sub {
+            font-size: 10px;
+            font-weight: 300;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        #header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.18s ease;
+        }
+        .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        .icon-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        .icon-btn.muted { border-color: var(--text-muted); color: var(--text-muted); }
+
+        #status-dot {
+            width: 8px; height: 8px;
+            background: #3ecf6e;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #3ecf6e88;
+            flex-shrink: 0;
+        }
+
+        #status-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        #online-indicator {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 12px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            background: var(--bg-surface);
+        }
+
+        /* ── Chat Area ── */
+        #chat-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #chat {
+            height: 100%;
+            overflow-y: auto;
+            padding: 28px 24px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            scroll-behavior: smooth;
+        }
+
+        #chat::-webkit-scrollbar { width: 4px; }
+        #chat::-webkit-scrollbar-track { background: transparent; }
+        #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .msg-row {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 12px;
+        }
+        .msg-row.user { align-items: flex-end; }
+        .msg-row.bot { align-items: flex-start; }
+
+        .msg-label {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            padding: 0 4px;
         }
 
         .bubble {
-            padding: 12px 16px;
-            border-radius: 18px;
-            max-width: 72%;
-            line-height: 1.5;
-            font-size: 15px;
+            padding: 13px 18px;
+            border-radius: 16px;
+            max-width: 70%;
+            line-height: 1.6;
+            font-size: 14.5px;
             word-wrap: break-word;
+            position: relative;
         }
-        .user { align-self: flex-end; background: #0062cc; border-bottom-right-radius: 4px; }
-        .bot { align-self: flex-start; background: #1e1e1e; border: 1px solid #00ffcc55; color: #00ffcc; border-bottom-left-radius: 4px; }
 
-        #input-area {
-            padding: 14px 20px;
-            background: #1a1a1a;
-            border-top: 1px solid #00ffcc22;
+        .user .bubble {
+            background: var(--user-bubble);
+            border: 1px solid var(--user-border);
+            border-bottom-right-radius: 4px;
+            color: #dde8f5;
+        }
+
+        .bot .bubble {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .bot .bubble::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-dim), transparent);
+            border-radius: 16px 16px 0 0;
+        }
+
+        /* Typing indicator */
+        .typing-row {
             display: flex;
+            align-items: flex-start;
             gap: 10px;
+            margin-bottom: 12px;
+            padding: 4px 0;
+        }
+
+        .typing-bubble {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            padding: 14px 20px;
+            display: flex;
+            gap: 5px;
             align-items: center;
+        }
+
+        .dot {
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: blink 1.2s infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.25; transform: scale(1); }
+            40% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ── Status Bar ── */
+        #status-bar {
+            padding: 4px 24px 6px;
+            min-height: 22px;
+            flex-shrink: 0;
+        }
+
+        #status-text {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Input Area ── */
+        #input-area {
+            padding: 14px 24px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        #input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 6px 6px 6px 18px;
+            transition: border-color 0.2s;
+        }
+
+        #input-row:focus-within {
+            border-color: var(--accent-dim);
+            box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
         }
 
         #textInput {
             flex: 1;
-            padding: 11px 16px;
-            border-radius: 25px;
-            border: 1px solid #333;
-            background: #2a2a2a;
-            color: white;
-            font-size: 15px;
-            outline: none;
-            transition: border 0.2s;
-        }
-        #textInput:focus { border-color: #00ffcc55; }
-        #textInput:disabled { opacity: 0.5; }
-
-        .btn {
-            padding: 11px 18px;
+            background: none;
             border: none;
-            border-radius: 25px;
+            outline: none;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14.5px;
+            padding: 6px 0;
+            caret-color: var(--accent);
+        }
+
+        #textInput::placeholder { color: var(--text-muted); }
+        #textInput:disabled { opacity: 0.4; }
+
+        .action-btn {
+            width: 38px; height: 38px;
+            border: none;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.18s ease;
+            flex-shrink: 0;
         }
+
         #voiceBtn {
-            background: #222;
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
-            min-width: 50px;
+            background: var(--bg-surface);
+            color: var(--text-secondary);
         }
+        #voiceBtn:hover { background: var(--accent-dim); color: var(--accent); }
         #voiceBtn.listening {
-            background: #00ffcc;
+            background: var(--accent);
             color: #000;
-            animation: pulse 1s infinite;
+            animation: pulse 1.2s infinite;
         }
-        #sendBtn { background: #00ffcc; color: #000; }
-        #sendBtn:hover { background: #00ddb0; }
-        #sendBtn:disabled { opacity: 0.5; cursor: default; }
+
+        #sendBtn {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+        #sendBtn:hover { background: var(--accent-hover); }
+        #sendBtn:disabled { opacity: 0.35; cursor: default; }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(201,168,76,0); }
         }
 
-        #status {
-            font-size: 12px;
-            color: #555;
-            padding: 0 20px 8px;
-            min-height: 20px;
+        #input-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+            letter-spacing: 0.2px;
         }
 
-        .typing { color: #555; font-style: italic; font-size: 14px; align-self: flex-start; padding: 8px 4px; }
+        /* Fade in animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg-row { animation: fadeUp 0.2s ease; }
     </style>
 </head>
 <body>
 
 <div id="header">
-    <h1><img src="/static/logo.png" alt="Talos Logo"> TALOS</h1>
-    <div id="header-right">
-        <button class="toggle-btn" id="ttsBtn" onclick="toggleTTS()">🔊 Voice On</button>
-        <button class="toggle-btn off" id="resetBtn" onclick="resetChat()" title="Clear conversation">↺ Reset</button>
+    <div id="brand">
+        <img src="/static/logo.png" alt="Talos">
+        <div id="brand-text">
+            <div id="brand-name">TALOS</div>
+            <div id="brand-sub">Personal AI</div>
+        </div>
+    </div>
+    <div id="header-actions">
+        <div id="online-indicator">
+            <div id="status-dot"></div>
+            <span id="status-label">Online</span>
+        </div>
+        <button class="icon-btn active" id="ttsBtn" onclick="toggleTTS()" title="Toggle voice output">🔊</button>
+        <button class="icon-btn" id="resetBtn" onclick="resetChat()" title="Clear conversation">↺</button>
     </div>
 </div>
 
-<div id="chat"></div>
-<div id="status"></div>
+<div id="chat-wrapper">
+    <div id="chat"></div>
+</div>
+
+<div id="status-bar"><span id="status-text"></span></div>
 
 <div id="input-area">
-    <input type="text" id="textInput" placeholder="Talk to Talos..." onkeydown="if(event.key==='Enter') sendMessage()">
-    <button class="btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
-    <button class="btn" id="sendBtn" onclick="sendMessage()">Send</button>
+    <div id="input-row">
+        <input type="text" id="textInput" placeholder="Message Talos..." onkeydown="if(event.key==='Enter'&&!event.shiftKey) sendMessage()">
+        <button class="action-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
+        <button class="action-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+    </div>
+    <div id="input-hint">Press Enter to send &nbsp;·&nbsp; Click 🎤 for voice</div>
 </div>
 
 <script>
     const chat = document.getElementById('chat');
-    const statusEl = document.getElementById('status');
+    const statusText = document.getElementById('status-text');
     const ttsBtn = document.getElementById('ttsBtn');
     const sendBtn = document.getElementById('sendBtn');
     const textInput = document.getElementById('textInput');
@@ -143,12 +399,14 @@
     let recognition = null;
     let isListening = false;
 
-    function setStatus(msg) { statusEl.textContent = msg; }
+    function setStatus(msg) { statusText.textContent = msg; }
 
     function toggleTTS() {
         ttsEnabled = !ttsEnabled;
-        ttsBtn.textContent = ttsEnabled ? '🔊 Voice On' : '🔇 Voice Off';
-        ttsBtn.classList.toggle('off', !ttsEnabled);
+        ttsBtn.textContent = ttsEnabled ? '🔊' : '🔇';
+        ttsBtn.classList.toggle('active', ttsEnabled);
+        ttsBtn.classList.toggle('muted', !ttsEnabled);
+        ttsBtn.title = ttsEnabled ? 'Toggle voice output' : 'Voice muted';
         if (!ttsEnabled) synth.cancel();
     }
 
@@ -183,12 +441,31 @@
     }
 
     function addBubble(text, type) {
+        const row = document.createElement('div');
+        row.className = `msg-row ${type}`;
+
+        const label = document.createElement('div');
+        label.className = 'msg-label';
+        label.textContent = type === 'user' ? 'You' : 'Talos';
+
         const b = document.createElement('div');
-        b.className = `bubble ${type}`;
+        b.className = 'bubble';
         b.innerText = text;
-        chat.appendChild(b);
+
+        row.appendChild(label);
+        row.appendChild(b);
+        chat.appendChild(row);
         chat.scrollTop = chat.scrollHeight;
         if (type === 'bot') speak(text);
+    }
+
+    function showTyping() {
+        const row = document.createElement('div');
+        row.className = 'typing-row';
+        row.id = 'typing-indicator';
+        row.innerHTML = '<div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
     }
 
     function setLoading(loading) {
@@ -221,7 +498,7 @@
         };
         recognition.onerror = (e) => {
             stopListening();
-            setStatus(e.error === 'not-allowed' ? 'Mic permission denied.' : 'Voice error: ' + e.error);
+            setStatus(e.error === 'not-allowed' ? 'Microphone access denied.' : 'Voice error: ' + e.error);
         };
         recognition.onend = () => stopListening();
         recognition.start();
@@ -237,18 +514,12 @@
 
     async function sendMessage() {
         const message = textInput.value.trim();
-        if (!message) return;
+        if (!message || sendBtn.disabled) return;
 
         addBubble(message, 'user');
         textInput.value = '';
         setLoading(true);
-
-        const typing = document.createElement('div');
-        typing.className = 'typing';
-        typing.id = 'typing-indicator';
-        typing.textContent = 'Talos is thinking...';
-        chat.appendChild(typing);
-        chat.scrollTop = chat.scrollHeight;
+        showTyping();
 
         try {
             const response = await fetch('/ask', {
@@ -264,6 +535,7 @@
             addBubble('Connection error. Please try again.', 'bot');
         }
         setLoading(false);
+        textInput.focus();
     }
 
     async function resetChat() {
