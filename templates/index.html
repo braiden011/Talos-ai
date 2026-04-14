@@ -410,16 +410,27 @@
 
     function loadVoices() {
         const voices = synth.getVoices();
-        const preferred = ['Google UK English Male', 'Microsoft David Desktop', 'Microsoft Mark', 'Alex', 'Daniel'];
-        for (const name of preferred) {
+
+        // Prefer Italian male voices for a Roman sound
+        const italianMale = voices.find(v => v.lang.startsWith('it') && v.name.toLowerCase().includes('male'))
+                         || voices.find(v => v.lang === 'it-IT')
+                         || voices.find(v => v.lang.startsWith('it'));
+
+        if (italianMale) {
+            preferredVoice = italianMale;
+            return;
+        }
+
+        // Fallback: deep English male voice
+        const deepNames = ['Google UK English Male', 'Microsoft David Desktop', 'Microsoft Mark', 'Alex', 'Daniel', 'Fred'];
+        for (const name of deepNames) {
             const v = voices.find(v => v.name === name);
-            if (v) { preferredVoice = v; break; }
+            if (v) { preferredVoice = v; return; }
         }
-        if (!preferredVoice) {
-            preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
-                          || voices.find(v => v.lang.startsWith('en'))
-                          || voices[0];
-        }
+
+        preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
+                      || voices.find(v => v.lang.startsWith('en'))
+                      || voices[0];
     }
     synth.onvoiceschanged = loadVoices;
     loadVoices();
@@ -429,8 +440,8 @@
         synth.cancel();
         const msg = new SpeechSynthesisUtterance(text);
         if (preferredVoice) msg.voice = preferredVoice;
-        msg.rate = 0.92;
-        msg.pitch = 0.85;
+        msg.rate = 0.82;   // Slower — deliberate, commanding
+        msg.pitch = 0.65;  // Deep, masculine
         msg.volume = 1;
         synth.speak(msg);
     }
