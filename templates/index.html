@@ -23,6 +23,7 @@
             --border-subtle: #1e1d28;
             --user-bubble: #1e3a5f;
             --user-border: #2a5080;
+            --danger: #e05555;
         }
 
         body {
@@ -47,307 +48,195 @@
             flex-shrink: 0;
             position: relative;
         }
-
         #header::after {
             content: '';
             position: absolute;
-            bottom: -1px;
-            left: 0; right: 0;
+            bottom: -1px; left: 0; right: 0;
             height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
         }
-
-        #brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        #brand img {
-            height: 38px;
-            width: auto;
-            filter: drop-shadow(0 0 8px rgba(201,168,76,0.35));
-        }
-
-        #brand-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        #brand-name {
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 3px;
-            color: var(--accent);
-            line-height: 1;
-        }
-
-        #brand-sub {
-            font-size: 10px;
-            font-weight: 300;
-            color: var(--text-muted);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-top: 3px;
-        }
-
-        #header-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.18s ease;
-        }
+        #brand { display: flex; align-items: center; gap: 12px; }
+        #brand img { height: 38px; width: auto; filter: drop-shadow(0 0 8px rgba(201,168,76,0.35)); }
+        #brand-text { display: flex; flex-direction: column; }
+        #brand-name { font-size: 16px; font-weight: 600; letter-spacing: 3px; color: var(--accent); line-height: 1; }
+        #brand-sub { font-size: 10px; font-weight: 300; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+        #header-actions { display: flex; align-items: center; gap: 6px; }
+        #online-indicator { display: flex; align-items: center; gap: 7px; padding: 6px 12px; border: 1px solid var(--border-subtle); border-radius: 20px; background: var(--bg-surface); }
+        #status-dot { width: 8px; height: 8px; background: #3ecf6e; border-radius: 50%; box-shadow: 0 0 6px #3ecf6e88; flex-shrink: 0; }
+        #status-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
+        .icon-btn { background: none; border: none; color: var(--text-secondary); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: color 0.18s ease; }
         .icon-btn:hover { color: var(--accent); }
         .icon-btn.active { color: var(--accent); }
         .icon-btn.muted { color: var(--text-muted); }
 
-        #status-dot {
-            width: 8px; height: 8px;
-            background: #3ecf6e;
-            border-radius: 50%;
-            box-shadow: 0 0 6px #3ecf6e88;
-            flex-shrink: 0;
-        }
-
-        #status-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-        }
-
-        #online-indicator {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            padding: 6px 12px;
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            background: var(--bg-surface);
-        }
-
-        /* ── Chat Area ── */
-        #chat-wrapper {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #chat {
-            height: 100%;
-            overflow-y: auto;
-            padding: 28px 24px 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            scroll-behavior: smooth;
-        }
-
+        /* ── Chat ── */
+        #chat-wrapper { flex: 1; overflow: hidden; position: relative; }
+        #chat { height: 100%; overflow-y: auto; padding: 28px 24px 8px; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; }
         #chat::-webkit-scrollbar { width: 4px; }
         #chat::-webkit-scrollbar-track { background: transparent; }
         #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-        .msg-row {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 12px;
-        }
+        .msg-row { display: flex; flex-direction: column; margin-bottom: 12px; animation: fadeUp 0.2s ease; }
         .msg-row.user { align-items: flex-end; }
         .msg-row.bot { align-items: flex-start; }
+        .msg-label { font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; padding: 0 4px; }
+        .bubble { padding: 13px 18px; border-radius: 16px; max-width: 70%; line-height: 1.6; font-size: 14.5px; word-wrap: break-word; position: relative; white-space: pre-wrap; }
+        .user .bubble { background: var(--user-bubble); border: 1px solid var(--user-border); border-bottom-right-radius: 4px; color: #dde8f5; }
+        .bot .bubble { background: var(--bg-surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; color: var(--text-primary); }
+        .bot .bubble::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--accent-dim), transparent); border-radius: 16px 16px 0 0; }
+        .bubble img { max-width: 100%; border-radius: 8px; margin-top: 8px; display: block; }
 
-        .msg-label {
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            padding: 0 4px;
-        }
-
-        .bubble {
-            padding: 13px 18px;
-            border-radius: 16px;
-            max-width: 70%;
-            line-height: 1.6;
-            font-size: 14.5px;
-            word-wrap: break-word;
-            position: relative;
-        }
-
-        .user .bubble {
-            background: var(--user-bubble);
-            border: 1px solid var(--user-border);
-            border-bottom-right-radius: 4px;
-            color: #dde8f5;
-        }
-
-        .bot .bubble {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-bottom-left-radius: 4px;
-            color: var(--text-primary);
-        }
-
-        .bot .bubble::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, var(--accent-dim), transparent);
-            border-radius: 16px 16px 0 0;
-        }
-
-        /* Typing indicator */
-        .typing-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 12px;
-            padding: 4px 0;
-        }
-
-        .typing-bubble {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            border-bottom-left-radius: 4px;
-            padding: 14px 20px;
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-
-        .dot {
-            width: 6px; height: 6px;
-            background: var(--accent);
-            border-radius: 50%;
-            opacity: 0.4;
-            animation: blink 1.2s infinite;
-        }
+        /* Typing */
+        .typing-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; padding: 4px 0; }
+        .typing-bubble { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; border-bottom-left-radius: 4px; padding: 14px 20px; display: flex; gap: 5px; align-items: center; }
+        .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; opacity: 0.4; animation: blink 1.2s infinite; }
         .dot:nth-child(2) { animation-delay: 0.2s; }
         .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 80%, 100% { opacity: 0.25; transform: scale(1); } 40% { opacity: 1; transform: scale(1.2); } }
 
-        @keyframes blink {
-            0%, 80%, 100% { opacity: 0.25; transform: scale(1); }
-            40% { opacity: 1; transform: scale(1.2); }
-        }
+        /* Status */
+        #status-bar { padding: 4px 24px 6px; min-height: 22px; flex-shrink: 0; }
+        #status-text { font-size: 11.5px; color: var(--text-muted); letter-spacing: 0.3px; }
 
-        /* ── Status Bar ── */
-        #status-bar {
-            padding: 4px 24px 6px;
-            min-height: 22px;
-            flex-shrink: 0;
-        }
-
-        #status-text {
-            font-size: 11.5px;
-            color: var(--text-muted);
-            letter-spacing: 0.3px;
-        }
-
-        /* ── Input Area ── */
-        #input-area {
-            padding: 14px 24px 20px;
+        /* Image preview */
+        #image-preview-wrap {
+            padding: 8px 24px 0;
+            display: none;
             background: var(--bg-secondary);
-            border-top: 1px solid var(--border-subtle);
-            flex-shrink: 0;
         }
-
-        #input-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-elevated);
+        #image-preview-inner {
+            position: relative;
+            display: inline-block;
+        }
+        #image-preview-img {
+            height: 64px;
+            border-radius: 8px;
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 6px 6px 6px 18px;
-            transition: border-color 0.2s;
         }
-
-        #input-row:focus-within {
-            border-color: var(--accent-dim);
-            box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
-        }
-
-        #textInput {
-            flex: 1;
-            background: none;
+        #image-remove {
+            position: absolute;
+            top: -6px; right: -6px;
+            background: var(--danger);
+            color: white;
             border: none;
-            outline: none;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            font-size: 14.5px;
-            padding: 6px 0;
-            caret-color: var(--accent);
+            border-radius: 50%;
+            width: 18px; height: 18px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
 
+        /* Input Area */
+        #input-area { padding: 10px 24px 20px; background: var(--bg-secondary); border-top: 1px solid var(--border-subtle); flex-shrink: 0; }
+        #input-row { display: flex; align-items: center; gap: 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 14px; padding: 6px 6px 6px 18px; transition: border-color 0.2s; }
+        #input-row:focus-within { border-color: var(--accent-dim); box-shadow: 0 0 0 3px rgba(201,168,76,0.06); }
+        #textInput { flex: 1; background: none; border: none; outline: none; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 14.5px; padding: 6px 0; caret-color: var(--accent); }
         #textInput::placeholder { color: var(--text-muted); }
         #textInput:disabled { opacity: 0.4; }
-
-        .action-btn {
-            width: 36px; height: 36px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: all 0.18s ease;
-            flex-shrink: 0;
-            background: none;
-            color: var(--text-secondary);
-        }
-
+        .action-btn { width: 36px; height: 36px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.18s ease; flex-shrink: 0; background: none; color: var(--text-secondary); }
+        #imageBtn:hover { color: var(--accent); }
         #voiceBtn:hover { color: var(--accent); }
-        #voiceBtn.listening {
-            color: var(--accent);
-            animation: pulse 1.2s infinite;
-        }
-
-        #sendBtn {
-            color: var(--accent);
-        }
+        #voiceBtn.listening { color: var(--accent); animation: pulse 1.2s infinite; }
+        #sendBtn { color: var(--accent); }
         #sendBtn:hover { color: var(--accent-hover); }
         #sendBtn:disabled { opacity: 0.3; cursor: default; }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); } 50% { box-shadow: 0 0 0 6px rgba(201,168,76,0); } }
+        #input-hint { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; letter-spacing: 0.2px; }
+        #imageInput { display: none; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(201,168,76,0); }
+        /* ── Journal Modal ── */
+        #journal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
         }
-
-        #input-hint {
-            font-size: 11px;
-            color: var(--text-muted);
+        #journal-overlay.open { display: flex; }
+        #journal-modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 480px;
+            max-width: 90vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #journal-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #journal-header h2 { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 1px; }
+        #journal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; line-height: 1; }
+        #journal-close:hover { color: var(--text-primary); }
+        #journal-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        #journal-lock { display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 20px 0; }
+        #journal-lock p { color: var(--text-secondary); font-size: 14px; }
+        #journal-passcode {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 16px;
+            color: var(--text-primary);
+            font-size: 20px;
+            letter-spacing: 8px;
             text-align: center;
-            margin-top: 8px;
-            letter-spacing: 0.2px;
+            outline: none;
+            width: 160px;
+            font-family: 'Inter', sans-serif;
         }
-
-        /* Fade in animation */
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+        #journal-passcode:focus { border-color: var(--accent-dim); }
+        #journal-error { color: var(--danger); font-size: 12px; min-height: 16px; }
+        .journal-entry {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13.5px;
+            color: var(--text-primary);
+            line-height: 1.5;
         }
-        .msg-row { animation: fadeUp 0.2s ease; }
+        .journal-entry.empty { color: var(--text-muted); font-style: italic; text-align: center; }
+        #journal-write-row { display: flex; gap: 8px; }
+        #journal-new-entry {
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 13.5px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        #journal-new-entry:focus { border-color: var(--accent-dim); }
+        .j-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.18s;
+        }
+        .j-btn.primary { background: var(--accent); color: #000; }
+        .j-btn.primary:hover { background: var(--accent-hover); }
+        .j-btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .j-btn.danger:hover { background: var(--danger); color: white; }
+        .j-btn.ghost { background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border); }
+        .j-btn.ghost:hover { color: var(--accent); border-color: var(--accent-dim); }
     </style>
 </head>
 <body>
 
+<!-- ── Header ── -->
 <div id="header">
     <div id="brand">
         <img src="/static/logo.png" alt="Talos">
@@ -362,25 +251,69 @@
             <span id="status-label">Online</span>
         </div>
         <button class="icon-btn active" id="ttsBtn" onclick="toggleTTS()" title="Toggle voice output">🔊</button>
-        <button class="icon-btn" id="resetBtn" onclick="resetChat()" title="Clear conversation">↺</button>
+        <button class="icon-btn" onclick="openJournal()" title="Open Journal">📓</button>
+        <button class="icon-btn" onclick="resetChat()" title="Clear conversation">↺</button>
     </div>
 </div>
 
+<!-- ── Chat ── -->
 <div id="chat-wrapper">
     <div id="chat"></div>
 </div>
 
 <div id="status-bar"><span id="status-text"></span></div>
 
+<!-- Image preview -->
+<div id="image-preview-wrap">
+    <div id="image-preview-inner">
+        <img id="image-preview-img" src="" alt="preview">
+        <button id="image-remove" onclick="removeImage()">✕</button>
+    </div>
+</div>
+
+<!-- ── Input ── -->
 <div id="input-area">
     <div id="input-row">
         <input type="text" id="textInput" placeholder="Message Talos..." onkeydown="if(event.key==='Enter'&&!event.shiftKey) sendMessage()">
+        <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect(event)">
+        <button class="action-btn" id="imageBtn" onclick="document.getElementById('imageInput').click()" title="Attach image">🖼️</button>
         <button class="action-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
         <button class="action-btn" id="sendBtn" onclick="sendMessage()" title="Send">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
     </div>
-    <div id="input-hint">Press Enter to send &nbsp;·&nbsp; Click 🎤 for voice</div>
+    <div id="input-hint">Enter to send &nbsp;·&nbsp; 🎤 voice &nbsp;·&nbsp; 🖼️ image</div>
+</div>
+
+<!-- ── Journal Modal ── -->
+<div id="journal-overlay" onclick="if(event.target===this) closeJournal()">
+    <div id="journal-modal">
+        <div id="journal-header">
+            <h2>📓 SECURE JOURNAL</h2>
+            <button id="journal-close" onclick="closeJournal()">×</button>
+        </div>
+        <div id="journal-body">
+            <!-- Lock screen -->
+            <div id="journal-lock">
+                <p>Enter your 4-digit passcode</p>
+                <input type="password" id="journal-passcode" maxlength="4" placeholder="••••"
+                    oninput="if(this.value.length===4) unlockJournal()">
+                <div id="journal-error"></div>
+            </div>
+            <!-- Unlocked content -->
+            <div id="journal-content" style="display:none; flex-direction:column; gap:12px;">
+                <div id="journal-entries"></div>
+                <div id="journal-write-row">
+                    <input type="text" id="journal-new-entry" placeholder="Write a new entry..." onkeydown="if(event.key==='Enter') writeJournalEntry()">
+                    <button class="j-btn primary" onclick="writeJournalEntry()">Add</button>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="j-btn danger" onclick="deleteJournal()">🗑 Clear all</button>
+                    <button class="j-btn ghost" onclick="closeJournal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -393,15 +326,17 @@
     let ttsEnabled = true;
     let recognition = null;
     let isListening = false;
+    let pendingImageB64 = null;
+    let journalPasscode = null;
 
     function setStatus(msg) { statusText.textContent = msg; }
 
+    // ── TTS ──
     function toggleTTS() {
         ttsEnabled = !ttsEnabled;
         ttsBtn.textContent = ttsEnabled ? '🔊' : '🔇';
         ttsBtn.classList.toggle('active', ttsEnabled);
         ttsBtn.classList.toggle('muted', !ttsEnabled);
-        ttsBtn.title = ttsEnabled ? 'Toggle voice output' : 'Voice muted';
         if (!ttsEnabled) synth.cancel();
     }
 
@@ -410,13 +345,11 @@
 
     function loadVoices() {
         const voices = synth.getVoices();
-
         const deepNames = ['Google UK English Male', 'Microsoft David Desktop', 'Microsoft Mark', 'Alex', 'Daniel', 'Fred'];
         for (const name of deepNames) {
             const v = voices.find(v => v.name === name);
             if (v) { preferredVoice = v; return; }
         }
-
         preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
                       || voices.find(v => v.lang.startsWith('en'))
                       || voices[0];
@@ -427,18 +360,16 @@
     function speak(text) {
         if (!ttsEnabled) return;
         synth.cancel();
-
         const msg = new SpeechSynthesisUtterance(text);
-
         if (preferredVoice) msg.voice = preferredVoice;
-
         msg.rate = 0.82;
         msg.pitch = 0.65;
         msg.volume = 1;
         synth.speak(msg);
     }
 
-    function addBubble(text, type) {
+    // ── Chat bubbles ──
+    function addBubble(text, type, imgSrc) {
         const row = document.createElement('div');
         row.className = `msg-row ${type}`;
 
@@ -448,7 +379,12 @@
 
         const b = document.createElement('div');
         b.className = 'bubble';
-        b.innerText = text;
+        if (text) b.innerText = text;
+        if (imgSrc) {
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            b.appendChild(img);
+        }
 
         row.appendChild(label);
         row.appendChild(b);
@@ -471,6 +407,28 @@
         textInput.disabled = loading;
     }
 
+    // ── Image upload ──
+    function handleImageSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const dataUrl = ev.target.result;
+            pendingImageB64 = dataUrl.split(',')[1];
+            document.getElementById('image-preview-img').src = dataUrl;
+            document.getElementById('image-preview-wrap').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    }
+
+    function removeImage() {
+        pendingImageB64 = null;
+        document.getElementById('image-preview-wrap').style.display = 'none';
+        document.getElementById('image-preview-img').src = '';
+    }
+
+    // ── Voice input ──
     function toggleVoiceInput() {
         isListening ? stopListening() : startListening();
     }
@@ -478,11 +436,9 @@
     function startListening() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) { setStatus('Voice input not supported in this browser.'); return; }
-
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = false;
-
         recognition.onstart = () => {
             isListening = true;
             voiceBtn.classList.add('listening');
@@ -510,12 +466,17 @@
         if (recognition) { recognition.stop(); recognition = null; }
     }
 
+    // ── Send message ──
     async function sendMessage() {
         const message = textInput.value.trim();
-        if (!message || sendBtn.disabled) return;
+        if ((!message && !pendingImageB64) || sendBtn.disabled) return;
 
-        addBubble(message, 'user');
+        const imgSrc = pendingImageB64 ? document.getElementById('image-preview-img').src : null;
+        addBubble(message, 'user', imgSrc);
+
+        const imageToSend = pendingImageB64;
         textInput.value = '';
+        removeImage();
         setLoading(true);
         showTyping();
 
@@ -523,7 +484,7 @@
             const response = await fetch('/ask', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message, image: imageToSend })
             });
             const data = await response.json();
             document.getElementById('typing-indicator')?.remove();
@@ -541,6 +502,86 @@
         chat.innerHTML = '';
         setStatus('Conversation cleared.');
         setTimeout(() => setStatus(''), 2000);
+    }
+
+    // ── Journal ──
+    function openJournal() {
+        journalPasscode = null;
+        document.getElementById('journal-passcode').value = '';
+        document.getElementById('journal-error').textContent = '';
+        document.getElementById('journal-lock').style.display = 'flex';
+        document.getElementById('journal-content').style.display = 'none';
+        document.getElementById('journal-overlay').classList.add('open');
+        setTimeout(() => document.getElementById('journal-passcode').focus(), 100);
+    }
+
+    function closeJournal() {
+        document.getElementById('journal-overlay').classList.remove('open');
+        journalPasscode = null;
+    }
+
+    async function unlockJournal() {
+        const code = document.getElementById('journal-passcode').value;
+        const res = await fetch('/journal/unlock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: code })
+        });
+        const data = await res.json();
+        if (data.error) {
+            document.getElementById('journal-error').textContent = data.error;
+            document.getElementById('journal-passcode').value = '';
+            return;
+        }
+        journalPasscode = code;
+        document.getElementById('journal-error').textContent = '';
+        document.getElementById('journal-lock').style.display = 'none';
+        document.getElementById('journal-content').style.display = 'flex';
+        renderEntries(data.entries);
+    }
+
+    function renderEntries(entries) {
+        const container = document.getElementById('journal-entries');
+        container.innerHTML = '';
+        if (!entries.length) {
+            container.innerHTML = '<div class="journal-entry empty">No entries yet.</div>';
+            return;
+        }
+        entries.forEach(e => {
+            const div = document.createElement('div');
+            div.className = 'journal-entry';
+            div.textContent = e;
+            container.appendChild(div);
+        });
+    }
+
+    async function writeJournalEntry() {
+        const input = document.getElementById('journal-new-entry');
+        const entry = input.value.trim();
+        if (!entry) return;
+        await fetch('/journal/write', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: journalPasscode, entry })
+        });
+        input.value = '';
+        const res = await fetch('/journal/unlock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: journalPasscode })
+        });
+        const data = await res.json();
+        renderEntries(data.entries);
+    }
+
+    async function deleteJournal() {
+        if (!confirm('Clear all journal entries? This cannot be undone.')) return;
+        await fetch('/journal/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: journalPasscode })
+        });
+        renderEntries([]);
     }
 </script>
 </body>
