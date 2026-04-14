@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talos AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0d0d0f;
+            --bg-secondary: #13131a;
+            --bg-surface: #1a1a24;
+            --accent: #c9a84c;
+            --accent-dim: #c9a84c33;
+            --accent-hover: #e0bc6a;
+            --text-primary: #f0ede8;
+            --text-secondary: #8a8794;
+            --text-muted: #4a4858;
+            --border: #2a2838;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle radial glow */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-wrap {
+            position: relative;
+        }
+
+        .logo-wrap img {
+            height: 90px;
+            width: auto;
+            filter: drop-shadow(0 0 24px rgba(201,168,76,0.4));
+        }
+
+        .brand-name {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 8px;
+            color: var(--accent);
+            margin-top: 4px;
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            font-weight: 300;
+            color: var(--text-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .divider {
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+        }
+
+        .tagline {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--accent);
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.18s ease, transform 0.12s ease;
+            width: 100%;
+        }
+        .login-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+        .login-btn:active { transform: translateY(0); }
+
+        .footer-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-wrap">
+            <img src="/static/logo.png" alt="Talos">
+        </div>
+        <div>
+            <div class="brand-name">TALOS</div>
+            <div class="brand-sub">Personal AI</div>
+        </div>
+        <div class="divider"></div>
+        <p class="tagline">Your intelligent personal assistant.<br>Sign in to continue.</p>
+        <a href="/auth/login" class="login-btn">Sign In to Continue</a>
+        <p class="footer-note">Secured with Replit Auth</p>
+    </div>
+</body>
+</html>
