@@ -144,6 +144,58 @@
         #imageInput { display: none; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ── PIN Setup Modal ── */
+        #pin-setup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        #pin-setup-overlay.open { display: flex; }
+        #pin-setup-modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 360px;
+            max-width: 90vw;
+            padding: 32px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        #pin-setup-modal .setup-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        #pin-setup-modal .setup-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.5;
+        }
+        .pin-input {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 22px;
+            letter-spacing: 10px;
+            text-align: center;
+            outline: none;
+            width: 180px;
+            font-family: 'Inter', sans-serif;
+        }
+        .pin-input:focus { border-color: var(--accent-dim); }
+        #pin-setup-error { color: var(--danger); font-size: 12px; min-height: 16px; text-align: center; }
+
         /* ── Journal Modal ── */
         #journal-overlay {
             display: none;
@@ -183,13 +235,13 @@
             background: var(--bg-elevated);
             border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 10px 16px;
+            padding: 12px 16px;
             color: var(--text-primary);
-            font-size: 20px;
-            letter-spacing: 8px;
+            font-size: 22px;
+            letter-spacing: 10px;
             text-align: center;
             outline: none;
-            width: 160px;
+            width: 180px;
             font-family: 'Inter', sans-serif;
         }
         #journal-passcode:focus { border-color: var(--accent-dim); }
@@ -283,6 +335,19 @@
         </button>
     </div>
     <div id="input-hint">Enter to send &nbsp;·&nbsp; 🎤 voice &nbsp;·&nbsp; 🖼️ image</div>
+</div>
+
+<!-- ── PIN Setup Modal (first run) ── -->
+<div id="pin-setup-overlay">
+    <div id="pin-setup-modal">
+        <div class="setup-title">🔐 SECURE JOURNAL</div>
+        <div class="setup-sub">Welcome, Braiden.<br>Choose a PIN to protect your journal.</div>
+        <input type="password" class="pin-input" id="pin-setup-input" maxlength="8" placeholder="••••" inputmode="numeric">
+        <div class="setup-sub" style="margin-top:-4px">Confirm your PIN</div>
+        <input type="password" class="pin-input" id="pin-setup-confirm" maxlength="8" placeholder="••••" inputmode="numeric" onkeydown="if(event.key==='Enter') savePin()">
+        <div id="pin-setup-error"></div>
+        <button class="j-btn primary" style="width:100%; padding:14px;" onclick="savePin()">Set PIN</button>
+    </div>
 </div>
 
 <!-- ── Journal Modal ── -->
@@ -496,6 +561,34 @@
         chat.innerHTML = '';
         setStatus('Conversation cleared.');
         setTimeout(() => setStatus(''), 2000);
+    }
+
+    // ── First-run PIN check ──
+    async function checkPin() {
+        const res = await fetch('/journal/has_pin');
+        const data = await res.json();
+        if (!data.has_pin) {
+            document.getElementById('pin-setup-overlay').classList.add('open');
+            setTimeout(() => document.getElementById('pin-setup-input').focus(), 150);
+        }
+    }
+    checkPin();
+
+    async function savePin() {
+        const pin = document.getElementById('pin-setup-input').value.trim();
+        const confirm = document.getElementById('pin-setup-confirm').value.trim();
+        const errEl = document.getElementById('pin-setup-error');
+        errEl.textContent = '';
+        if (!pin || pin.length < 4) { errEl.textContent = 'PIN must be at least 4 digits.'; return; }
+        if (pin !== confirm) { errEl.textContent = 'PINs do not match. Try again.'; document.getElementById('pin-setup-confirm').value = ''; document.getElementById('pin-setup-confirm').focus(); return; }
+        const res = await fetch('/journal/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (data.error) { errEl.textContent = data.error; return; }
+        document.getElementById('pin-setup-overlay').classList.remove('open');
     }
 
     // ── Journal ──

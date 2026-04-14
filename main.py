@@ -11,7 +11,18 @@ client = OpenAI(
 )
 
 JOURNAL_FILE = "Journal.txt"
-JOURNAL_PASSCODE = "0907"
+JOURNAL_PIN_FILE = "journal_pin.txt"
+
+def get_journal_pin():
+    try:
+        with open(JOURNAL_PIN_FILE, "r") as f:
+            return f.read().strip()
+    except:
+        return None
+
+def set_journal_pin(pin):
+    with open(JOURNAL_PIN_FILE, "w") as f:
+        f.write(pin.strip())
 
 def load_memory():
     try:
@@ -136,11 +147,25 @@ def tts():
 
 # ── Journal Routes ──
 
+@app.route('/journal/has_pin', methods=['GET'])
+def journal_has_pin():
+    return jsonify({"has_pin": get_journal_pin() is not None})
+
+@app.route('/journal/setup', methods=['POST'])
+def journal_setup():
+    if get_journal_pin() is not None:
+        return jsonify({"error": "PIN already set."})
+    pin = request.json.get("pin", "").strip()
+    if not pin.isdigit() or len(pin) < 4:
+        return jsonify({"error": "PIN must be at least 4 digits."})
+    set_journal_pin(pin)
+    return jsonify({"status": "ok"})
+
 @app.route('/journal/unlock', methods=['POST'])
 def journal_unlock():
     passcode = request.json.get("passcode", "")
-    if passcode != JOURNAL_PASSCODE:
-        return jsonify({"error": "Access Denied."})
+    if passcode != get_journal_pin():
+        return jsonify({"error": "Wrong PIN. Try again."})
     entries = []
     if os.path.exists(JOURNAL_FILE):
         with open(JOURNAL_FILE, "r") as f:
@@ -150,8 +175,8 @@ def journal_unlock():
 @app.route('/journal/write', methods=['POST'])
 def journal_write():
     data = request.json
-    if data.get("passcode") != JOURNAL_PASSCODE:
-        return jsonify({"error": "Access Denied."})
+    if data.get("passcode") != get_journal_pin():
+        return jsonify({"error": "Wrong PIN."})
     entry = data.get("entry", "").strip()
     if entry:
         with open(JOURNAL_FILE, "a") as f:
@@ -161,8 +186,8 @@ def journal_write():
 @app.route('/journal/delete', methods=['POST'])
 def journal_delete():
     data = request.json
-    if data.get("passcode") != JOURNAL_PASSCODE:
-        return jsonify({"error": "Access Denied."})
+    if data.get("passcode") != get_journal_pin():
+        return jsonify({"error": "Wrong PIN."})
     open(JOURNAL_FILE, "w").close()
     return jsonify({"status": "ok"})
 
