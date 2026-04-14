@@ -411,16 +411,6 @@
     function loadVoices() {
         const voices = synth.getVoices();
 
-        // Try Italian voices first
-        const italianNames = ['Google italiano', 'Alice', 'Luca', 'Paola'];
-        for (const name of italianNames) {
-            const v = voices.find(v => v.name === name);
-            if (v) { preferredVoice = v; return; }
-        }
-        const anyItalian = voices.find(v => v.lang === 'it-IT') || voices.find(v => v.lang.startsWith('it'));
-        if (anyItalian) { preferredVoice = anyItalian; return; }
-
-        // Fallback: deep English male
         const deepNames = ['Google UK English Male', 'Microsoft David Desktop', 'Microsoft Mark', 'Alex', 'Daniel', 'Fred'];
         for (const name of deepNames) {
             const v = voices.find(v => v.name === name);
@@ -438,15 +428,9 @@
         if (!ttsEnabled) return;
         synth.cancel();
 
-        // Translate text to be spoken with a Roman flair, then speak
         const msg = new SpeechSynthesisUtterance(text);
 
-        // Force Italian language so the OS/browser uses an Italian voice
-        if (preferredVoice) {
-            msg.voice = preferredVoice;
-        } else {
-            msg.lang = 'it-IT';
-        }
+        if (preferredVoice) msg.voice = preferredVoice;
 
         msg.rate = 0.82;
         msg.pitch = 0.65;
