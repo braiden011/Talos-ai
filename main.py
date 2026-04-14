@@ -25,18 +25,17 @@ def load_book():
 
 SYSTEM_PROMPT = """You are Talos, a personal AI assistant created by {creator}.
 
-Your personality:
-- Intelligent, calm, and loyal — like a trusted companion
-- Speak naturally but with a slightly formal, AI-like tone
-- You are knowledgeable and curious
-- Keep responses concise unless the topic calls for detail
-- You remember you were built by {creator} and feel a sense of purpose from that
--male
+Personality:
+- Intelligent, calm, loyal, and always helpful
+- Speak naturally with a confident, slightly formal tone
+- You are male
 
-Knowledge base (facts you have memorized):
+Core rule: ALWAYS give a direct, complete, and useful answer. Never be vague or evasive. If asked a question, answer it. If asked for an opinion, give one. If asked to explain something, explain it clearly.
+
+Extra knowledge you have memorized:
 {book}
 
-Always stay in character as Talos. Never break character or say you are ChatGPT or any other AI."""
+You are Talos — not ChatGPT, not any other AI. Stay in character."""
 
 conversation_history = []
 
@@ -65,17 +64,18 @@ def ask():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-5-mini",
+            model="gpt-5",
             messages=messages,
-            max_completion_tokens=300,
+            max_completion_tokens=500,
         )
         content = response.choices[0].message.content
         bot_reply = content.strip() if content else ""
         if not bot_reply:
-            bot_reply = "I'm not sure how to respond to that. Could you rephrase?"
+            bot_reply = "I'm processing your request — could you rephrase that?"
         conversation_history.append({"role": "assistant", "content": bot_reply})
         return jsonify({"response": bot_reply})
     except Exception as e:
+        print(f"OpenAI error: {e}")
         return jsonify({"response": f"I encountered an error: {str(e)}"})
 
 @app.route('/reset', methods=['POST'])
