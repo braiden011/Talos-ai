@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, Response
 from openai import OpenAI
-import json, os, base64
+import json, os, base64, asyncio
+import edge_tts
 
 app = Flask(__name__)
 
@@ -113,13 +114,22 @@ def tts():
     if not text:
         return '', 400
     try:
-        audio_response = client.audio.speech.create(
-            model="tts-1-hd",
-            voice="onyx",
-            input=text,
-            response_format="mp3",
-        )
-        return Response(audio_response.content, mimetype='audio/mpeg')
+        async def generate_audio():
+            communicate = edge_tts.Communicate(
+                text,
+                voice="en-US-ChristopherNeural",
+                rate="-8%",
+                pitch="-12Hz",
+                volume="+0%",
+            )
+            audio_chunks = []
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_chunks.append(chunk["data"])
+            return b"".join(audio_chunks)
+
+        audio_data = asyncio.run(generate_audio())
+        return Response(audio_data, mimetype='audio/mpeg')
     except Exception as e:
         print(f"[TTS error] {e}")
         return '', 500
