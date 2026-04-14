@@ -99,21 +99,21 @@
 
         .icon-btn {
             background: none;
-            border: 1px solid var(--border);
+            border: none;
             color: var(--text-secondary);
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.18s ease;
+            transition: color 0.18s ease;
         }
-        .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-        .icon-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-        .icon-btn.muted { border-color: var(--text-muted); color: var(--text-muted); }
+        .icon-btn:hover { color: var(--accent); }
+        .icon-btn.active { color: var(--accent); }
+        .icon-btn.muted { color: var(--text-muted); }
 
         #status-dot {
             width: 8px; height: 8px;
@@ -299,9 +299,9 @@
         #textInput:disabled { opacity: 0.4; }
 
         .action-btn {
-            width: 38px; height: 38px;
+            width: 36px; height: 36px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -309,26 +309,21 @@
             font-size: 16px;
             transition: all 0.18s ease;
             flex-shrink: 0;
-        }
-
-        #voiceBtn {
-            background: var(--bg-surface);
+            background: none;
             color: var(--text-secondary);
         }
-        #voiceBtn:hover { background: var(--accent-dim); color: var(--accent); }
+
+        #voiceBtn:hover { color: var(--accent); }
         #voiceBtn.listening {
-            background: var(--accent);
-            color: #000;
+            color: var(--accent);
             animation: pulse 1.2s infinite;
         }
 
         #sendBtn {
-            background: var(--accent);
-            color: #000;
-            font-weight: 600;
+            color: var(--accent);
         }
-        #sendBtn:hover { background: var(--accent-hover); }
-        #sendBtn:disabled { opacity: 0.35; cursor: default; }
+        #sendBtn:hover { color: var(--accent-hover); }
+        #sendBtn:disabled { opacity: 0.3; cursor: default; }
 
         @keyframes pulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
