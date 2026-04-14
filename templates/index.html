@@ -410,27 +410,30 @@
 
     function loadVoices() {
         const voices = synth.getVoices();
+        console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`).join(', '));
 
-        // Prefer Italian male voices for a Roman sound
-        const italianMale = voices.find(v => v.lang.startsWith('it') && v.name.toLowerCase().includes('male'))
-                         || voices.find(v => v.lang === 'it-IT')
-                         || voices.find(v => v.lang.startsWith('it'));
-
-        if (italianMale) {
-            preferredVoice = italianMale;
-            return;
+        // Try Italian voices in priority order
+        const italianNames = ['Google italiano', 'Microsoft Elsa', 'Alice', 'Luca', 'Paola'];
+        for (const name of italianNames) {
+            const v = voices.find(v => v.name === name);
+            if (v) { preferredVoice = v; console.log('Using voice:', v.name); return; }
         }
 
-        // Fallback: deep English male voice
+        // Any Italian voice
+        const anyItalian = voices.find(v => v.lang === 'it-IT') || voices.find(v => v.lang.startsWith('it'));
+        if (anyItalian) { preferredVoice = anyItalian; console.log('Using voice:', anyItalian.name); return; }
+
+        // Fallback: deep English male
         const deepNames = ['Google UK English Male', 'Microsoft David Desktop', 'Microsoft Mark', 'Alex', 'Daniel', 'Fred'];
         for (const name of deepNames) {
             const v = voices.find(v => v.name === name);
-            if (v) { preferredVoice = v; return; }
+            if (v) { preferredVoice = v; console.log('Using voice:', v.name); return; }
         }
 
         preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
                       || voices.find(v => v.lang.startsWith('en'))
                       || voices[0];
+        if (preferredVoice) console.log('Using fallback voice:', preferredVoice.name);
     }
     synth.onvoiceschanged = loadVoices;
     loadVoices();
@@ -438,10 +441,19 @@
     function speak(text) {
         if (!ttsEnabled) return;
         synth.cancel();
+
+        // Translate text to be spoken with a Roman flair, then speak
         const msg = new SpeechSynthesisUtterance(text);
-        if (preferredVoice) msg.voice = preferredVoice;
-        msg.rate = 0.82;   // Slower — deliberate, commanding
-        msg.pitch = 0.65;  // Deep, masculine
+
+        // Force Italian language so the OS/browser uses an Italian voice
+        if (preferredVoice) {
+            msg.voice = preferredVoice;
+        } else {
+            msg.lang = 'it-IT';
+        }
+
+        msg.rate = 0.82;
+        msg.pitch = 0.65;
         msg.volume = 1;
         synth.speak(msg);
     }
