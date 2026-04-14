@@ -410,30 +410,26 @@
 
     function loadVoices() {
         const voices = synth.getVoices();
-        console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`).join(', '));
 
-        // Try Italian voices in priority order
-        const italianNames = ['Google italiano', 'Microsoft Elsa', 'Alice', 'Luca', 'Paola'];
+        // Try Italian voices first
+        const italianNames = ['Google italiano', 'Alice', 'Luca', 'Paola'];
         for (const name of italianNames) {
             const v = voices.find(v => v.name === name);
-            if (v) { preferredVoice = v; console.log('Using voice:', v.name); return; }
+            if (v) { preferredVoice = v; return; }
         }
-
-        // Any Italian voice
         const anyItalian = voices.find(v => v.lang === 'it-IT') || voices.find(v => v.lang.startsWith('it'));
-        if (anyItalian) { preferredVoice = anyItalian; console.log('Using voice:', anyItalian.name); return; }
+        if (anyItalian) { preferredVoice = anyItalian; return; }
 
         // Fallback: deep English male
         const deepNames = ['Google UK English Male', 'Microsoft David Desktop', 'Microsoft Mark', 'Alex', 'Daniel', 'Fred'];
         for (const name of deepNames) {
             const v = voices.find(v => v.name === name);
-            if (v) { preferredVoice = v; console.log('Using voice:', v.name); return; }
+            if (v) { preferredVoice = v; return; }
         }
 
         preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
                       || voices.find(v => v.lang.startsWith('en'))
                       || voices[0];
-        if (preferredVoice) console.log('Using fallback voice:', preferredVoice.name);
     }
     synth.onvoiceschanged = loadVoices;
     loadVoices();

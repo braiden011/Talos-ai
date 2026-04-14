@@ -64,8 +64,6 @@ def ask():
             messages=messages,
         )
         content = response.choices[0].message.content
-        finish = response.choices[0].finish_reason
-        print(f"[Talos] finish={finish!r} content={content!r}")
 
         bot_reply = content.strip() if content else ""
         if not bot_reply:
@@ -78,7 +76,6 @@ def ask():
                 ],
             )
             retry_content = retry.choices[0].message.content
-            print(f"[Talos retry] content={retry_content!r}")
             bot_reply = retry_content.strip() if retry_content else "I didn't quite get that. Could you ask again?"
 
         conversation_history.append({"role": "assistant", "content": bot_reply})
