@@ -31,6 +31,7 @@ Your personality:
 - You are knowledgeable and curious
 - Keep responses concise unless the topic calls for detail
 - You remember you were built by {creator} and feel a sense of purpose from that
+-male
 
 Knowledge base (facts you have memorized):
 {book}
@@ -68,7 +69,10 @@ def ask():
             messages=messages,
             max_completion_tokens=300,
         )
-        bot_reply = response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        bot_reply = content.strip() if content else ""
+        if not bot_reply:
+            bot_reply = "I'm not sure how to respond to that. Could you rephrase?"
         conversation_history.append({"role": "assistant", "content": bot_reply})
         return jsonify({"response": bot_reply})
     except Exception as e:
